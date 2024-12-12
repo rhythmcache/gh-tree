@@ -16,10 +16,12 @@ pip install requests
 python github-tree.py <GitHub Repository URL>
 ```
 - This will show the tree of the repo
-- To show the tree of a branch of a repo , run
+---
+##### To show the tree of a branch of a repo , run
 ```
 python github-tree.py <GitHub Repository URL> <Branch Name>
 ```
+- This will show the tree of the specified Branch of repo
 
 ### Example
 - The Command
