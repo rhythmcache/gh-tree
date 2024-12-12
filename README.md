@@ -10,12 +10,16 @@
 ```
 pip install requests
 ```
-- Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V1/github-tree.py)
+- Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V1/github-tree.py)
 - Now run
 ```
 python github-tree.py <GitHub Repository URL>
 ```
 - This will show the tree of the repo
+- To show the tree of a branch of a repo , run
+```
+python github-tree.py <GitHub Repository URL> <Branch Name>
+```
 
 ### Example
 - The Command
