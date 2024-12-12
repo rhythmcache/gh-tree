@@ -6,7 +6,7 @@ import requests
 import sys
 from urllib.parse import urlparse
 
-def fetch_tree(repo_url):
+def fetch_tree(repo_url, branch):
     if repo_url.endswith(".git"):
         repo_url = repo_url[:-4]
     
@@ -21,10 +21,19 @@ def fetch_tree(repo_url):
         return
     
     user, repo = path_parts[:2]
-    branch = "main"
-    if "tree" in path_parts:
-        branch = path_parts[path_parts.index("tree") + 1]
-    
+
+    # If branch is not specified, fetch repository details to get the default branch
+    if not branch:
+        repo_info_url = f"https://api.github.com/repos/{user}/{repo}"
+        repo_info_response = requests.get(repo_info_url)
+        
+        if repo_info_response.status_code == 200:
+            branch = repo_info_response.json().get("default_branch", "main")
+        else:
+            print("Error fetching repository info.")
+            return
+
+    # Use the specified or default branch to fetch the tree
     api_url = f"https://api.github.com/repos/{user}/{repo}/git/trees/{branch}?recursive=1"
     
     response = requests.get(api_url)
@@ -36,7 +45,6 @@ def fetch_tree(repo_url):
         print(response.json().get("message", "No additional information provided."))
 
 def print_tree(tree):
-    # Create a nested structure and count files and folders
     structure = {}
     file_count = 0
     folder_count = 0
@@ -69,12 +77,13 @@ def print_tree(tree):
     print("Total files:", file_count)
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python github-tree.py <GitHub Repository URL>")
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("Usage: python github-tree.py <GitHub Repository URL> [branch]")
         return
     
     repo_url = sys.argv[1]
-    fetch_tree(repo_url)
+    branch = sys.argv[2] if len(sys.argv) == 3 else None
+    fetch_tree(repo_url, branch)
 
 if __name__ == "__main__":
     main()
