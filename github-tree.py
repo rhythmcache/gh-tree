@@ -1,3 +1,7 @@
+# github-tree.py
+# coldnw.t.me
+# github.com/rhythmcache
+
 import requests
 import sys
 from urllib.parse import urlparse
