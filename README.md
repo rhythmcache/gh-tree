@@ -1,4 +1,5 @@
 # github-repo-tree-viewer
+[![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?style=flat-square&logo=telegram)](https://t.me/ximistuffschat)
 
 A simple ⚠️experimental python script which allows you to view the tree (structure) of a public GitHub repository. 
 
@@ -6,6 +7,7 @@ A simple ⚠️experimental python script which allows you to view the tree (str
 
 ## Usage
 
+- Ensure Python is installed in your System
 - Install dependency
 ```
 pip install requests
@@ -40,5 +42,9 @@ python github-tree.py https://github.com/rhythmcache/video-to-bootanimation
 Total folders: 5
 Total files: 7
 ```
+
+
+##### Bugs
+- Find and tell
 
 
