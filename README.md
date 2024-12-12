@@ -2,12 +2,14 @@
 
 A simple ⚠️experimental python script which allows you to view the tree (structure) of a public GitHub repository. 
 
+
+
+## Usage
+
 - Install dependency
 ```
 pip install requests
 ```
-
-## Usage
 - Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V1/github-tree.py)
 - Now run
 ```
