@@ -8,7 +8,7 @@ pip install requests
 ```
 
 ## Usage
-- Download [github-tree.py](https://raw.githubusercontent.com/rhythmcache/github-repo-tree-viewer/refs/heads/main/github-tree.py?token=GHSAT0AAAAAAC3ZQLEH3O75QJ5LOHNA7SAOZ23BAIQ)
+- Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V1/github-tree.py)
 - Now run
 ```
 python github-tree.py <GitHub Repository URL>
