@@ -1,6 +1,6 @@
 # github-repo-tree-viewer
 
-# A Simple ⚠️ Experimental Python Script to View the Directory Structure or Tree of a Public GitHub Repository
+- A Simple ⚠️ Experimental Python Script to View the Directory Structure or Tree of a Public GitHub Repository
 
 
 ## Usage
