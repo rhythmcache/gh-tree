@@ -1,7 +1,6 @@
 # github-repo-tree-viewer
-[![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?style=flat-square&logo=telegram)](https://t.me/ximistuffschat)
 
-A simple ⚠️experimental python script which allows you to view the tree (structure) of a public GitHub repository. 
+A simple ⚠️ experimental python script which allows you to view the tree (structure) of a public GitHub repository. 
 
 
 
@@ -46,5 +45,6 @@ Total files: 7
 
 ##### Bugs
 - Find and tell
+[![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?style=flat-square&logo=telegram)](https://t.me/ximistuffschat)
 
 
