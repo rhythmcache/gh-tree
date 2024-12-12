@@ -22,32 +22,21 @@ python github-tree.py https://github.com/rhythmcache/video-to-bootanimation
 ```
 - The Output
 ```
-└── META-INF
 ├── META-INF
 │   └── com
-├── META-INF
-│   ├── com
-│   │   └── google
-├── META-INF
-│   ├── com
-│   │   ├── google
-│   │   │   └── android
-├── META-INF
-│   ├── com
-│   │   ├── google
-│   │   │   ├── android
-│   │   │   │   └── update-binary
-├── META-INF
-│   ├── com
-│   │   ├── google
-│   │   │   ├── android
-│   │   │   │   └── updater-script
-└── README.md
+│       └── google
+│           └── android
+│               ├── update-binary
+│               └── updater-script
+├── README.md
 ├── bin
-│   └── ffmpeg
-├── bin
+│   ├── ffmpeg
 │   └── zip
-└── customize.sh
+├── customize.sh
+└── module.prop
+
+Total folders: 5
+Total files: 7
 ```
 
 
