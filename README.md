@@ -26,6 +26,7 @@ Usage:
 
 
 - Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V2/github-tree.py)
+
 Running :
 ```
 python github-tree.py view <GitHub Repository URL>
