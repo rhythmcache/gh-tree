@@ -4,64 +4,77 @@
 
 import requests
 import sys
+import os
 from urllib.parse import urlparse
 
-def fetch_tree(repo_url, branch):
+# Add your GitHub API token here if available
+API_TOKEN = ""  # Replace with "TOKEN-VALUE" if needed
+
+def fetch_repo_info(user, repo):
+    url = f"https://api.github.com/repos/{user}/{repo}"
+    headers = get_headers()
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print("Error fetching repository info.")
+        return None
+
+def fetch_tree_data(user, repo, branch):
+    url = f"https://api.github.com/repos/{user}/{repo}/git/trees/{branch}?recursive=1"
+    headers = get_headers()
+    all_items = []
+
+    while url:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            all_items.extend(data["tree"])
+            url = response.links.get('next', {}).get('url')  # Pagination
+        elif response.status_code == 403:
+            print("Rate limit exceeded. Try again later.")
+            return None
+        else:
+            print(f"Error fetching tree: {response.status_code}")
+            print(response.json().get("message", "No additional information provided."))
+            return None
+
+    return all_items
+
+def parse_github_url(repo_url):
     if repo_url.endswith(".git"):
         repo_url = repo_url[:-4]
     
     parsed_url = urlparse(repo_url)
     if not parsed_url.netloc.endswith("github.com"):
-        print("Error: Invalid GitHub URL.")
-        return
-    
+        return None, None
+
     path_parts = parsed_url.path.strip("/").split("/")
     if len(path_parts) < 2:
-        print("Error: Unable to parse user and repository from URL.")
-        return
-    
-    user, repo = path_parts[:2]
+        return None, None
 
-    # If branch is not specified, fetch repository details to get the default branch
-    if not branch:
-        repo_info_url = f"https://api.github.com/repos/{user}/{repo}"
-        repo_info_response = requests.get(repo_info_url)
-        
-        if repo_info_response.status_code == 200:
-            branch = repo_info_response.json().get("default_branch", "main")
-        else:
-            print("Error fetching repository info.")
-            return
+    return path_parts[:2]
 
-    # Use the specified or default branch to fetch the tree
-    api_url = f"https://api.github.com/repos/{user}/{repo}/git/trees/{branch}?recursive=1"
-    
-    response = requests.get(api_url)
-    if response.status_code == 200:
-        tree = response.json()["tree"]
-        print_tree(tree)
-    else:
-        print(f"Error: Unable to fetch repository tree (status code {response.status_code}).")
-        print(response.json().get("message", "No additional information provided."))
+def create_placeholder_structure(tree, base_path):
+    for item in tree:
+        path = os.path.join(base_path, item["path"])
+        if item["type"] == "tree":
+            os.makedirs(path, exist_ok=True)
+        elif item["type"] == "blob":
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
+                pass
+
+    print(f"Placeholder structure created at: {base_path}")
 
 def print_tree(tree):
     structure = {}
-    file_count = 0
-    folder_count = 0
 
     for item in tree:
         parts = item["path"].split("/")
         current_level = structure
         for part in parts:
-            if part not in current_level:
-                current_level[part] = {}
-            current_level = current_level[part]
-
-        # Count files and folders
-        if item["type"] == "blob":  # 'blob' indicates a file
-            file_count += 1
-        elif item["type"] == "tree":  # 'tree' indicates a folder
-            folder_count += 1
+            current_level = current_level.setdefault(part, {})
 
     def print_nested(d, prefix=""):
         for i, (key, value) in enumerate(d.items()):
@@ -69,21 +82,79 @@ def print_tree(tree):
             print(prefix + connector + key)
             print_nested(value, prefix + ("    " if connector == "└── " else "│   "))
 
-    # Print the directory structure
     print_nested(structure)
 
-    # Print the counts
-    print("\nTotal folders:", folder_count)
-    print("Total files:", file_count)
+def count_files_and_folders(tree):
+    files = sum(1 for item in tree if item["type"] == "blob")
+    folders = sum(1 for item in tree if item["type"] == "tree")
+    return files, folders
+
+def get_headers():
+    """Prepare headers for the request, including API token if available."""
+    headers = {}
+    if API_TOKEN:
+        print("Using API token to fetch data...")
+        headers["Authorization"] = f"token {API_TOKEN}"
+    return headers
 
 def main():
-    if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print("Usage: python github-tree.py <GitHub Repository URL> [branch]")
+    if len(sys.argv) < 3:
+        print("Usage:")
+        print(f"  python {os.path.basename(__file__)} touch <output-path> <GitHub Repository URL> [branch]")
+        print(f"  python {os.path.basename(__file__)} view <GitHub Repository URL> [branch]")
         return
-    
-    repo_url = sys.argv[1]
-    branch = sys.argv[2] if len(sys.argv) == 3 else None
-    fetch_tree(repo_url, branch)
+
+    command = sys.argv[1]
+    if command not in ["touch", "view"]:
+        print(f"Error: Unsupported command '{command}'.")
+        return
+
+    if command == "touch":
+        if len(sys.argv) < 4:
+            print("Error: Missing arguments for 'touch' command.")
+            return
+        
+        base_path = sys.argv[2]
+        repo_url = sys.argv[3]
+        branch = sys.argv[4] if len(sys.argv) > 4 else None
+        user, repo = parse_github_url(repo_url)
+
+        if not user or not repo:
+            print("Error: Invalid GitHub URL.")
+            return
+
+        if not branch:
+            repo_info = fetch_repo_info(user, repo)
+            branch = repo_info.get("default_branch", "main") if repo_info else "main"
+
+        tree = fetch_tree_data(user, repo, branch)
+        if tree:
+            create_placeholder_structure(tree, base_path)
+
+    elif command == "view":
+        if len(sys.argv) < 3:
+            print("Error: Missing arguments for 'view' command.")
+            return
+        
+        repo_url = sys.argv[2]
+        branch = sys.argv[3] if len(sys.argv) > 3 else None
+        user, repo = parse_github_url(repo_url)
+
+        if not user or not repo:
+            print("Error: Invalid GitHub URL.")
+            return
+
+        if not branch:
+            repo_info = fetch_repo_info(user, repo)
+            branch = repo_info.get("default_branch", "main") if repo_info else "main"
+
+        tree = fetch_tree_data(user, repo, branch)
+        if tree:
+            print_tree(tree)
+            files, folders = count_files_and_folders(tree)
+            print(f"\nTotal folders: {folders}")
+            print(f"Total files: {files}")
 
 if __name__ == "__main__":
     main()
+    
