@@ -15,6 +15,13 @@
 ```
 pip install requests
 ```
+- Clone this repo
+```
+git clone https://github.com/rhythmcache/github-repo-tree-viewer
+cd github-repo-tree-viewer
+```
+- or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V2/github-tree.py)
+
 
 ## Usage
 Usage:
@@ -22,10 +29,7 @@ Usage:
   python github-tree.py touch <output-path> <GitHub Repository URL> [branch]
   python github-tree.py view <GitHub Repository URL> [branch]
 ```
-
-
-
-- Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V2/github-tree.py)
+---
 
 Running :
 ```
