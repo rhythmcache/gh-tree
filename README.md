@@ -19,8 +19,8 @@ pip install requests
 ## Usage
 Usage:
 ```
-  python git.py touch <output-path> <GitHub Repository URL> [branch]
-  python git.py view <GitHub Repository URL> [branch]
+  python github-tree.py touch <output-path> <GitHub Repository URL> [branch]
+  python github-tree.py view <GitHub Repository URL> [branch]
 ```
 
 
@@ -36,7 +36,7 @@ python github-tree.py view <GitHub Repository URL>
 ---
 - To create local placeholders of files and folders of github repos , run
 ```
-python git.py touch <output-path> <GitHub Repository URL>
+python github-tree.py touch <output-path> <GitHub Repository URL>
 ```
 
 
@@ -48,13 +48,13 @@ python github-tree.py view <GitHub Repository URL> <Branch Name>
 ---
 To create local placeholders of files and folders of a branch of a github repo , run
 ```
-python git.py touch <output-path> <GitHub Repository URL> <Branch>
+python github-tree.py touch <output-path> <GitHub Repository URL> <Branch>
 ```
 
 ### Example
 - The Command
 ```
-python github-tree.py https://github.com/rhythmcache/video-to-bootanimation
+python github-tree.py view https://github.com/rhythmcache/video-to-bootanimation
 ```
 - The Output
 ```
