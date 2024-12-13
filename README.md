@@ -76,7 +76,7 @@ Total files: 7
 ```
 
 ## Private Repos
-To view the tree, create placeholders if your private repo, or handle public API rate limit restrictions, put your PAT in the `API_TOKEN=""` field of the script. For example, if your PAT is `djdieieii` , replace `API_TOKEN=""` with `API_TOKEN="djdieieii` .
+To view the tree, create placeholders of your private repo, or handle public API rate limit restrictions, put your PAT in the `API_TOKEN=""` field of the script. For example, if your PAT is `djdieieii` , replace `API_TOKEN=""` with `API_TOKEN="djdieieii` .
 
 
 ##### Bugs
