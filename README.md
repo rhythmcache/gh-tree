@@ -1,6 +1,12 @@
 # github-repo-tree-viewer
 
-- A Simple ⚠️ experimental Python script to recursively list the directory structure of GitHub Repositories. It Displays a Tree-Like format for easier visualization of Files and Directories similar to the `tree` Command for local directories on linux.
+- A simple ⚠️ experimental Python script to recursively list the directory structure of GitHub repositories.
+
+- It displays a tree-like format for easier visualization of files and directories, similar to the `tree` shell command for local directories on Linux.
+
+-  the script can also create an exact placeholder structure of folders and files from a GitHub re# github-repo-tree-viewer
+
+- by default it uses public API access but it also supports GitHub `Personal Access Token (PAT) ` to fetch private repository and handle rate limits.
 
 ## Usage
 
@@ -9,13 +15,14 @@
 ```
 pip install requests
 ```
-- Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V1/github-tree.py)
+- Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V2/github-tree.py)
 - Now run
 ```
-python github-tree.py <GitHub Repository URL>
+python github-tree.py view <GitHub Repository URL>
 ```
 - This will show the tree of the repo
 ---
+
 ##### To show the tree of a branch of a repo , run
 ```
 python github-tree.py <GitHub Repository URL> <Branch Name>
