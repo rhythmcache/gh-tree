@@ -4,7 +4,7 @@
 
 - It displays a tree-like format for easier visualization of files and directories, similar to the `tree` shell command for local directories on Linux.
 
--  the script can also create an exact placeholder structure of folders and files from a GitHub re# github-repo-tree-viewer
+-  the script can also create an exact placeholder structure of folders and files of a GitHub repository in your local directory.
 
 - by default it uses public API access but it also supports GitHub `Personal Access Token (PAT) ` to fetch private repository and handle rate limits.
 
