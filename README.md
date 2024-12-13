@@ -26,11 +26,12 @@ Usage:
 
 
 - Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V2/github-tree.py)
-- Now run
+Running :
 ```
 python github-tree.py view <GitHub Repository URL>
 ```
-- This will show the tree of the repo
+ will show the tree of the repo
+ 
 ---
 - To create local placeholders of files and folders of github repos , run
 ```
