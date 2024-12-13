@@ -8,13 +8,23 @@
 
 - by default it uses public API access but it also supports GitHub `Personal Access Token (PAT) ` to fetch private repository and handle rate limits.
 
-## Usage
-
-- Ensure Python is installed in your System
+## Requirements
+- Internet Connection
+- - Ensure Python is installed in your System
 - Install dependency
 ```
 pip install requests
 ```
+
+## Usage
+Usage:
+```
+  python git.py touch <output-path> <GitHub Repository URL> [branch]
+  python git.py view <GitHub Repository URL> [branch]
+```
+
+
+
 - Clone this repo or Download [github-tree.py](https://github.com/rhythmcache/github-repo-tree-viewer/releases/download/V2/github-tree.py)
 - Now run
 ```
@@ -22,12 +32,22 @@ python github-tree.py view <GitHub Repository URL>
 ```
 - This will show the tree of the repo
 ---
+- To create local placeholders of files and folders of github repos , run
+```
+python git.py touch <output-path> <GitHub Repository URL>
+```
+
 
 ##### To show the tree of a branch of a repo , run
 ```
 python github-tree.py <GitHub Repository URL> <Branch Name>
 ```
 - This will show the tree of the specified Branch of repo
+---
+To create local placeholders of files and folders of a branch of a github repo , run
+```
+python git.py touch <output-path> <GitHub Repository URL> <Branch>
+```
 
 ### Example
 - The Command
