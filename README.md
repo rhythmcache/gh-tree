@@ -42,7 +42,7 @@ python git.py touch <output-path> <GitHub Repository URL>
 
 ##### To show the tree of a branch of a repo , run
 ```
-python github-tree.py <GitHub Repository URL> <Branch Name>
+python github-tree.py view <GitHub Repository URL> <Branch Name>
 ```
 - This will show the tree of the specified Branch of repo
 ---
