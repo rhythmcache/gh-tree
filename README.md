@@ -4,7 +4,7 @@
 
 - It displays a tree-like format for easier visualization of files and directories, similar to the `tree` shell command for local directories on Linux.
 
--  the script can also create an exact placeholder structure of folders and files of a GitHub repository in your local directory.
+-  the script can also create a placeholder structure of folders and files of a GitHub repository in your local directory.
 
 - by default it uses public API access but it also supports GitHub `Personal Access Token (PAT) ` to fetch private repository and handle rate limits.
 
@@ -74,6 +74,9 @@ python github-tree.py https://github.com/rhythmcache/video-to-bootanimation
 Total folders: 5
 Total files: 7
 ```
+
+## Private Repos
+To view the tree, create placeholders if your private repo, or handle public API rate limit restrictions, put your PAT in the `API_TOKEN=""` field of the script. For example, if your PAT is `djdieieii` , replace `API_TOKEN=""` with `API_TOKEN="djdieieii` .
 
 
 ##### Bugs
