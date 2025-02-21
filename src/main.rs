@@ -557,7 +557,7 @@ fn print_usage() {
     println!("Usage:");
     println!("  ghtree touch <output-path> <GitHub Repository URL> [branch]");
     println!("  ghtree view <GitHub Repository URL> [branch] [-f <folder>] [-c]");
-    println!("  ghtree pull [-o <output-directory>] <GitHub Repository URL> [branch] <file/folder to pull>");
+    println!("  ghtree pull [-o <output-directory>] <GitHub Repository URL> <branch> <file/folder to pull>");
     println!("  ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]");
     println!("  ghtree --pat <token> [commands...]\n");
     println!("Options:");
