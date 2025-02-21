@@ -41,7 +41,7 @@ ghtree view https://github.com/torvalds/linux
 To view the tree of a specific folder within a repository:
 
 ```sh
-ghtree view https://github.com/torvalds/linux -f kernel
+ghtree view https://github.com/torvalds/linux -f fs
 ```
 
 ### Generate a Placeholder Directory Structure
@@ -101,6 +101,17 @@ export GH_TOKEN=<your_token>
 With this set, you can run commands without needing to specify `--pat` each time.
 
 ---
+
+
+
+## Build
+- Install Rust
+- Clone the repo
+```
+git clone https://github.com/rhythmcache/gh-tree
+cd gh-tree
+```
+- run `cargo build --release`
 
 ## License
 
