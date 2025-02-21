@@ -38,6 +38,12 @@ ghtree view <GitHub Repository URL> [branch]
 ghtree view https://github.com/torvalds/linux
 ```
 
+To view the tree of a specific folder within a repository:
+
+```sh
+ghtree view https://github.com/torvalds/linux -f kernel
+```
+
 ### Generate a Placeholder Directory Structure
 
 ```sh
