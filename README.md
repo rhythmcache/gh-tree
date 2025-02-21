@@ -8,17 +8,27 @@
 
 - by default it uses public API access but it also supports GitHub `Personal Access Token (PAT) ` to fetch private repository and handle rate limits.
 
+```
+How to use :
+  gh-tree touch <output-path> <GitHub Repository URL> [branch] [-c]
+  gh-tree view <GitHub Repository URL> [branch] [-c]
+  gh-tree --pat <token> [commands...]
+
+Options:
+  -c    Enable colored output with icons
+```
+
 ## Usage
 Usage:
 ```
 gh-tree touch <output-path> <GitHub Repository URL> [branch]
 ```
-it will create local placeholders of files and folders of github repos 
+- it will create local placeholders of files and folders of github repos 
  
 ```
 gh-tree view <GitHub Repository URL> [branch]
 ```
-will show the tree of the repo in fhe terminal
+- it will show the tree of the repo in fhe terminal
 ---
 
 
