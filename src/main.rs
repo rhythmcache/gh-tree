@@ -44,6 +44,25 @@ colored = "2.1"
 tokio-stream = "0.1"
 */
 
+/*
+
+Alternatively we can also try this incase static linking is failing
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json", "stream", "rustls-tls"], default-features = false }
+tokio = { version = "1.36", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3"
+anyhow = "1.0"
+directories = "5.0"
+indicatif = "0.17"
+async-stream = "0.3"
+colored = "2.1"
+tokio-stream = "0.1"
+
+*/
+
 use anyhow::{anyhow, Context, Result};
 use colored::*;
 use indicatif::{ProgressBar, ProgressStyle};
