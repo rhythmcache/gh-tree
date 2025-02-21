@@ -1,43 +1,54 @@
-name: Build gh-tree for multiple architectures
+name: Build
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 jobs:
   build:
-    name: Build for ${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         target:
           - x86_64-unknown-linux-musl
           - aarch64-unknown-linux-musl
-          - armv7-unknown-linux-musleabihf
-
+          - arm-unknown-linux-musleabi
+          - x86_64-pc-windows-gnu
+          - x86_64-apple-darwin
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install cross
+        run: cargo install cross
+
+      - name: Set up Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
           targets: ${{ matrix.target }}
 
-      - name: Install cross (for cross-compilation)
-        run: cargo install cross --git https://github.com/cross-rs/cross
+      - name: Build for ${{ matrix.target }}
+        run: cross build --release --target ${{ matrix.target }}
 
-      - name: Build (Static, Stripped, Small)
+      - name: Strip binary (Linux and macOS)
+        if: contains(matrix.target, 'linux') || contains(matrix.target, 'darwin')
         run: |
-          cross build --release --target ${{ matrix.target }}
-          strip --strip-all target/${{ matrix.target }}/release/gh-tree || true
-          upx --best --lzma target/${{ matrix.target }}/release/gh-tree || true
+          strip target/${{ matrix.target }}/release/gh-tree
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Compress binary (Windows)
+        if: contains(matrix.target, 'windows')
+        run: |
+          upx --best target/${{ matrix.target }}/release/gh-tree.exe
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
         with:
           name: gh-tree-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/gh-tree
+          path: target/${{ matrix.target }}/release/gh-tree*
