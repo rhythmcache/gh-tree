@@ -1,4 +1,4 @@
-#gh-tree
+# gh-tree
 
 A simple rust implementation which uses Github API to interact with repos directly from the terminal. Supports viewing and fetching repo structures, downloading files, and cloning entire trees as placeholders.
 
