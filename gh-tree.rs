@@ -16,7 +16,7 @@ limitations under the License.
 
 /*
 This implementation originates from
-https://github.com/rhythmcache/gh-tree/edit/main/gh-tree.rs
+https://github.com/rhythmcache/gh-tree
 */
 
 
