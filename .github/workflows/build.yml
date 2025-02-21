@@ -1,0 +1,43 @@
+name: Build gh-tree for multiple architectures
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    name: Build for ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - x86_64-unknown-linux-musl
+          - aarch64-unknown-linux-musl
+          - armv7-unknown-linux-musleabihf
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross (for cross-compilation)
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build (Static, Stripped, Small)
+        run: |
+          cross build --release --target ${{ matrix.target }}
+          strip --strip-all target/${{ matrix.target }}/release/gh-tree || true
+          upx --best --lzma target/${{ matrix.target }}/release/gh-tree || true
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-tree-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/gh-tree
