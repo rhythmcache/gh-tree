@@ -1,120 +1,110 @@
-# github-repo-tree-viewer
+#gh-tree
 
-- A simple binary which uses github api  to recursively list the directory structure of GitHub repositories.
+A simple rust implementation which uses Github API to interact with repos directly from the terminal. Supports viewing and fetching repo structures, downloading files, and cloning entire trees as placeholders.
 
-- It displays a tree-like format for easier visualization of files and directories, similar to the `tree` shell command for local directories on Linux.
+## Supported things
 
--  it can also create a placeholder structure of folders and files of a GitHub repository in your local directory.
+- View repository tree structure without cloning.
 
-- by default it uses public API access but it also supports GitHub `Personal Access Token (PAT) ` to fetch private repository and handle rate limits.
+- Download specific files or folders from a repository.
 
+- Generate a placeholder directory structure of repo
+
+- Download an entire repo as a ZIP file directly
+
+- also supports GitHub API authentication using Personal Access Token (PAT).
+
+## Usage
 ```
-How to use :
-  gh-tree touch <output-path> <GitHub Repository URL> [branch] [-c]
-  gh-tree view <GitHub Repository URL> [branch] [-c]
-  gh-tree --pat <token> [commands...]
+ghtree touch <output-path> <GitHub Repository URL> [branch]
+  ghtree view <GitHub Repository URL> [branch] [-f <folder>] [-c]
+  ghtree pull [-o <output-directory>] <GitHub Repository URL> [branch] <file/folder to pull>
+  ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]
+  ghtree --pat <token> [commands...]
 
 Options:
   -c    Enable colored output with icons
+  -f    View a specific folder in the repository
+```
+---
+### View a GitHub Repository Tree
+```sh
+ghtree view <GitHub Repository URL> [branch]
 ```
 
-## Usage
-Usage:
+**Example:**
+
+```sh
+ghtree view https://github.com/torvalds/linux
 ```
-gh-tree touch <output-path> <GitHub Repository URL> [branch]
+
+### Generate a Placeholder Directory Structure
+
+```sh
+ghtree touch <output-path> <GitHub Repository URL> [branch]
 ```
-- it will create local placeholders of files and folders of github repos 
- 
+
+**Example:**
+
+```sh
+ghtree touch ./linux-tree https://github.com/torvalds/linux main
 ```
-gh-tree view <GitHub Repository URL> [branch]
+
+### Download a Specific File or Folder
+
+```sh
+ghtree pull [-o <output-directory>] <GitHub Repository URL> [branch] <file/folder path>
 ```
-- it will show the tree of the repo in fhe terminal
+
+**Example:**
+
+```sh
+ghtree pull -o ./linux https://github.com/torvalds/linux master kernel/sched
+```
+
+This downloads `kernel/sched` from the Linux repository into `./linux`.
+
+### Download an Entire Repository as a ZIP File
+
+```sh
+ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]
+```
+
+**Example:**
+
+```sh
+ghtree -dl -o /home/winter/Documents https://github.com/torvalds/linux
+```
+
 ---
 
+## Authentication
+This implementation uses github public api to fetch things
+GitHub imposes rate limits on unauthenticated api requests. to increase request limits or to make it work with your private repos use a **Personal Access Token (PAT):**
 
-
-##### To show the tree of a branch of a repo , run
-```
-gh-tree view <GitHub Repository URL> <Branch Name>
-```
-- This will show the tree of the specified Branch of repo
----
-To create local placeholders of files and folders of a branch of a github repo , run
-```
-gh-tree touch <output-path> <GitHub Repository URL> <Branch>
+```sh
+ghtree --pat <your_token> view https://github.com/torvalds/linux
 ```
 
-### Example
-- The Command
-```
-gh-tree view https://github.com/rhythmcache/video-to-bootanimation
-```
-- The Output
-```
-├── META-INF
-│   └── com
-│       └── google
-│           └── android
-│               ├── update-binary
-│               └── updater-script
-├── README.md
-├── bin
-│   ├── ffmpeg
-│   └── zip
-├── customize.sh
-└── module.prop
+Alternatively, set the token as an environment variable for persistent authentication:
 
-Total folders: 5
-Total files: 7
+```sh
+export GH_TOKEN=<your_token>
 ```
 
-## Private Repos
-To view the tree, create placeholders of your private repo, or handle public API rate limit restrictions, you can use this as arguement 
-```
---pat <yout token>
-```
-
-## How to Build ?
-- Create new project
-
-```
-cargo new gh-tree && cd gh-tree
-```
-
-1. Add this in Cargo.toml
-
-```
-
-[dependencies]  
-tokio = { version = "1.36", features = ["full"] }  
-reqwest = { version = "0.11", features = ["json", "stream"] }  
-serde = { version = "1.0", features = ["derive"] }  
-serde_json = "1.0"  
-futures = "0.3"  
-anyhow = "1.0"  
-directories = "5.0"  
-indicatif = "0.17"  
-async-stream = "0.3"  
-colored = "2.1"  
-tokio-stream = "0.1"
-```
-
-
-3. Replace src/main.rs contents with gh-tree.rs contents
-
-
-4. build 
-
-```
-cargo build --release
-```
-
-
-
-##### Bugs
-- Find and tell
+With this set, you can run commands without needing to specify `--pat` each time.
 
 ---
-[![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?style=flat-square&logo=telegram)](https://t.me/ximistuffschat)
+
+## License
+
+`ghtree` is licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for full details.
+
+---
+
+### Contributions
+
+Contributions are welcome! Feel free to submit issues or pull requests on the [GitHub repository](https://github.com/rhythmcache/gh-tree).
+
 
 
