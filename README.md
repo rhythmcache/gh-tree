@@ -64,6 +64,43 @@ To view the tree, create placeholders of your private repo, or handle public API
 --pat <yout token>
 ```
 
+## How to Build ?
+- Create new project
+
+```
+cargo new gh-tree && cd gh-tree
+```
+
+1. Add this in Cargo.toml
+
+```
+
+[dependencies]  
+tokio = { version = "1.36", features = ["full"] }  
+reqwest = { version = "0.11", features = ["json", "stream"] }  
+serde = { version = "1.0", features = ["derive"] }  
+serde_json = "1.0"  
+futures = "0.3"  
+anyhow = "1.0"  
+directories = "5.0"  
+indicatif = "0.17"  
+async-stream = "0.3"  
+colored = "2.1"  
+tokio-stream = "0.1"
+```
+
+
+3. Replace src/main.rs contents with gh-tree.rs contents
+
+
+4. build 
+
+```
+cargo build --release
+```
+
+
+
 ##### Bugs
 - Find and tell
 
