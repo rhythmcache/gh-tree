@@ -37,7 +37,7 @@ ghrls pull <user/repo or URL> [--tag <tag>] (--all | <file>) [-o <dir>]
 ```
 ---
 
-to use pat , export it in environment
+to use pat , you can also export it in environment
 ```
 export GH_TOKEN=<your github PATH>
 ```
