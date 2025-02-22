@@ -14,104 +14,32 @@ A simple rust implementation which uses Github API to interact with repos direct
 
 - also supports GitHub API authentication using Personal Access Token (PAT).
 
+- others
+
 ## Usage
+- ghtree
 ```
 ghtree touch <output-path> <GitHub Repository URL> [branch]
   ghtree view <GitHub Repository URL> [branch] [-f <folder>] [-c]
-  ghtree pull [-o <output-directory>] <GitHub Repository URL> [branch] <file/folder to pull>
+  ghtree pull [-o <output-directory>] <GitHub Repository URL> <branch> <file/folder to pull>
   ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]
+  ghtree find <filename> <repo link> [branch]
   ghtree --pat <token> [commands...]
 
-Options:
-  -c    Enable colored output with icons
+Options:                                                                             -c    Enable colored output with icons
   -f    View a specific folder in the repository
 ```
----
-### View a GitHub Repository Tree
-```sh
-ghtree view <GitHub Repository URL> [branch]
+- ghrls
+ ```
+ghrls view <user/repo or URL> [--tag <tag>] [-d/--detailed] [-n/--no-color] [--latest [N]]
+
+ghrls pull <user/repo or URL> [--tag <tag>] (--all | <file>) [-o <dir>]
 ```
-
-**Example:**
-
-```sh
-ghtree view https://github.com/torvalds/linux
-```
-
-To view the tree of a specific folder within a repository:
-
-```sh
-ghtree view https://github.com/torvalds/linux -f fs
-```
-
-### Generate a Placeholder Directory Structure
-
-```sh
-ghtree touch <output-path> <GitHub Repository URL> [branch]
-```
-
-**Example:**
-
-```sh
-ghtree touch ./linux-tree https://github.com/torvalds/linux main
-```
-
-### Download a Specific File or Folder
-
-```sh
-ghtree pull [-o <output-directory>] <GitHub Repository URL> [branch] <file/folder path>
-```
-
-**Example:**
-
-```sh
-ghtree pull -o ./linux https://github.com/torvalds/linux master kernel/sched
-```
-
-This downloads `kernel/sched` from the Linux repository into `./linux`.
-
-### Download an Entire Repository as a ZIP File
-
-```sh
-ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]
-```
-
-**Example:**
-
-```sh
-ghtree -dl -o /home/winter/Documents https://github.com/torvalds/linux
-```
-
 ---
 
-## Authentication
-This implementation uses github public api to fetch things
-GitHub imposes rate limits on unauthenticated api requests. to increase request limits or to make it work with your private repos use a **Personal Access Token (PAT):**
-
-```sh
-ghtree --pat <your_token> view https://github.com/torvalds/linux
-```
-
-Alternatively, set the token as an environment variable for persistent authentication:
-
-```sh
-export GH_TOKEN=<your_token>
-```
-
-With this set, you can run commands without needing to specify `--pat` each time.
-
----
+see (Usage)[./usage.md]
 
 
-
-## Build
-- Install Rust
-- Clone the repo
-```
-git clone https://github.com/rhythmcache/gh-tree
-cd gh-tree
-```
-- run `cargo build --release`
 
 ## License
 
