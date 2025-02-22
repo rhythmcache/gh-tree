@@ -37,7 +37,7 @@ ghrls pull <user/repo or URL> [--tag <tag>] (--all | <file>) [-o <dir>]
 ```
 ---
 
-see (Usage)[./usage.md]
+see [Usage](./usage.md)
 
 
 
