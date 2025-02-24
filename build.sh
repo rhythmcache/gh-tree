@@ -53,4 +53,4 @@ if ! command -v cargo &>/dev/null; then
 fi
 idk="$curr/ghtree/target/release/ghtree"
 idk2="$curr/ghrls/target/release/ghrls"
-cd "$curr/ghtree" && cargo build --release && cd "$curr/ghrls" && cargo build --release && echo "Build Completed!!!" && [ -f "$idk" ] && echo "ghtree is at $idk" && [ -f "$idk2" ] && echo "ghrls is at $idk2" && echo "Done" && exit 0
+cd "$curr/ghtree" && cargo build --release && cd "$curr/ghrls" && cargo build --release && echo "[+] Build Completed!!!" && echo "" && [ -f "$idk" ] && echo "[+] ghtree is at $idk" && echo "" && [ -f "$idk2" ] && echo "[+] ghrls is at $idk2" && echo "" && echo "[+] Done" && exit 0
