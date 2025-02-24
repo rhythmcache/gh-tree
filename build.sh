@@ -1,7 +1,8 @@
 #!/bin/bash
 
 curr=$(pwd)
-
+[ -d "$curr/ghtree" ] && rm -r ghtree 
+[ -d "$curr/ghrls" ] && rm -r ghrls
 mkdir -p "$curr/ghtree/src" "$curr/ghrls/src" && cp "$curr/ghrls.rs" "$curr/ghrls/src/main.rs" && cp "$curr/ghtree.rs" "$curr/ghtree/src/main.rs"
 
 cat << 'EOF' > "$curr/ghtree/Cargo.toml"
