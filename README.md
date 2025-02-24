@@ -19,15 +19,14 @@ A simple rust implementation which uses Github API to interact with repos direct
 ## Usage
 - ghtree
 ```
-ghtree touch <output-path> <GitHub Repository URL> [branch]
-  ghtree view <GitHub Repository URL> [branch] [-f <folder>] [-c]
-  ghtree pull [-o <output-directory>] <GitHub Repository URL> <branch> <file/folder to pull>
-  ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]
-  ghtree find <filename> <repo link> [branch]
-  ghtree --pat <token> [commands...]
+Usage: ghtree touch [OPTIONS] --repo <REPO> --output <OUTPUT>
 
-Options:                                                                             -c    Enable colored output with icons
-  -f    View a specific folder in the repository
+Options:
+      --pat <PAT>        GitHub Personal Access Token (can also use GH_TOKEN env var)
+  -r, --repo <REPO>      Repository URL or owner/repo format
+  -o, --output <OUTPUT>  Output directory path
+  -b, --branch <BRANCH>  Branch name (default: repository's default branch)
+  -h, --help             Print help
 ```
 - ghrls
  ```
