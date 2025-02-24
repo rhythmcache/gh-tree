@@ -49,6 +49,12 @@ to use pat , you can also export it in environment
 export GH_TOKEN=<your github PATH>
 ```
 
+## Build
+- Install Rust then run
+```
+git clone --depth 1 https://github.com/rhythmcache/gh-tree.git && cd gh-tree && chmod +x ./build.sh && ./build.sh
+```
+
 
 
 
