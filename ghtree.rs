@@ -38,7 +38,7 @@ colored = "2.1"
 tokio-stream = "0.1"
 
 */
-  
+use clap::{Parser, Subcommand};
 use std::env;
 use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::time::sleep;
@@ -764,122 +764,139 @@ async fn find_file_in_repo(
     Ok(())
 }
 
-fn print_usage() {
-    println!("Usage:");
-    println!("  ghtree touch <output-path> <GitHub Repository URL> [branch]");
-    println!("  ghtree view <GitHub Repository URL> [branch] [-f <folder>] [-c]");
-    println!("  ghtree pull [-o <output-directory>] <GitHub Repository URL> <branch> <file/folder to pull>");
-    println!("  ghtree -dl [-o <output-directory>] <GitHub Repository URL> [branch]");
-    println!("  ghtree find <filename> <repo link> [branch]");
-    println!("  ghtree --pat <token> [commands...]\n");
-    println!("Options:");
-    println!("  -c    Enable colored output with icons");
-    println!("  -f    View a specific folder in the repository");
+#[derive(Parser)]
+#[command(name = "ghtree")]
+#[command(author = "rhythmcache")]
+#[command(version = "0.4.0")]
+#[command(about = "Command Line Utility That Uses Github API", long_about = None)]
+struct Cli {
+    /// GitHub Personal Access Token (can also use GH_TOKEN env var)
+    #[arg(long = "pat", global = true)]
+    pat: Option<String>,
+
+    /// Enable colored output with icons
+    #[arg(short = 'c', long = "color", global = true)]
+    color: bool,
+
+    #[command(subcommand)]
+    command: Commands,
 }
 
+#[derive(Subcommand)]
+enum Commands {
+    /// View repository structure
+    View {
+        /// Repository URL or owner/repo format
+        #[arg(short = 'r', long = "repo", required = true)]
+        repo: String,
 
+        /// Branch name (default: repository's default branch)
+        #[arg(short = 'b', long = "branch")]
+        branch: Option<String>,
 
+        /// Specific folder to view
+        #[arg(short = 'f', long = "folder")]
+        folder: Option<String>,
+    },
+
+    /// Create empty directory structure
+    Touch {
+        /// Repository URL or owner/repo format
+        #[arg(short = 'r', long = "repo", required = true)]
+        repo: String,
+
+        /// Output directory path
+        #[arg(short = 'o', long = "output", required = true)]
+        output: String,
+
+        /// Branch name (default: repository's default branch)
+        #[arg(short = 'b', long = "branch")]
+        branch: Option<String>,
+    },
+
+    /// Pull specific file or folder
+    Pull {
+        /// Repository URL or owner/repo format
+        #[arg(short = 'r', long = "repo", required = true)]
+        repo: String,
+
+        /// File or folder path to pull
+        #[arg(short = 'f', long = "path", required = true)]
+        path: String,
+
+        /// Branch name (default: repository's default branch)
+        #[arg(short = 'b', long = "branch")]
+        branch: Option<String>,
+
+        /// Output directory
+        #[arg(short = 'o', long = "output")]
+        output: Option<String>,
+    },
+
+    /// Download repository as zip
+    Download {
+        /// Repository URL or owner/repo format
+        #[arg(short = 'r', long = "repo", required = true)]
+        repo: String,
+
+        /// Branch name (default: repository's default branch)
+        #[arg(short = 'b', long = "branch")]
+        branch: Option<String>,
+
+        /// Output directory
+        #[arg(short = 'o', long = "output")]
+        output: Option<String>,
+    },
+
+    /// Find file in repository
+    Find {
+        /// Repository URL or owner/repo format
+        #[arg(short = 'r', long = "repo", required = true)]
+        repo: String,
+
+        /// Filename to search for
+        #[arg(short = 'f', long = "filename", required = true)]
+        filename: String,
+
+        /// Branch name (default: repository's default branch)
+        #[arg(short = 'b', long = "branch")]
+        branch: Option<String>,
+
+        #[arg(long = "exact")]
+        exact: bool,
+    },
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args: Vec<String> = std::env::args().collect();
-
-    if args.len() < 2 {
-        print_usage();
-        return Ok(());
-    }
-
-    let colored_output = args.iter().any(|arg| arg == "-c");
-    let env_token = env::var("GH_TOKEN").ok();
-
-    let (config, arg_offset) = if args.len() > 2 && args[1] == "--pat" {
-        let pat_token = args[2].clone();
+    let cli = Cli::parse();
+    let config = if let Some(token) = cli.pat.or_else(|| env::var("GH_TOKEN").ok()) {
         println!("Using provided PAT token to fetch data.");
-        (Arc::new(Config::with_token(pat_token, colored_output)), 2)
-    } else if let Some(token) = env_token {
-        println!("Using GH_TOKEN from environment to fetch data.");
-        (Arc::new(Config::with_token(token, colored_output)), 0)
+        Arc::new(Config::with_token(token, cli.color))
     } else {
-        (Arc::new(Config::new(colored_output)), 0)
+        Arc::new(Config::new(cli.color))
     };
 
-    let effective_args: Vec<_> = args
-        .iter()
-        .skip(1 + arg_offset)
-        .filter(|&arg| arg != "-c")
-        .collect();
-
-    if effective_args.is_empty() {
-        print_usage();
-        return Ok(());
-    }
-
-    match effective_args[0].as_str() {
-        "touch" => {
-            if effective_args.len() < 3 {
-                return Err(anyhow!("Missing arguments for 'touch' command"));
-            }
-
-            let base_path = PathBuf::from(&effective_args[1]);
-            let repo_url = &effective_args[2];
-            let branch = effective_args.get(3).map(|s| s.as_str());
-
-            let (user, repo) =
-                parse_github_url(repo_url).ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
+    match cli.command {
+        Commands::View { repo, branch, folder } => {
+            let (user, repo_name) = parse_github_url(&repo)
+                .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
 
             let progress = create_progress_bar("Fetching repository information...");
 
             let branch = if let Some(b) = branch {
-                b.to_string()
+                b
             } else {
-                fetch_repo_info(&user, &repo, &config).await?.default_branch
+                fetch_repo_info(&user, &repo_name, &config).await?.default_branch
             };
 
             progress.set_message("Fetching tree data...");
-            let tree_items =
-                fetch_tree_recursive(&user, &repo, &branch, &config, &progress).await?;
-
-            progress.set_message("Creating directory structure...");
-            create_placeholder_structure(tree_items, &base_path, &progress).await?;
-        }
-
-        "view" => {
-            if effective_args.len() < 2 {
-                return Err(anyhow!("Missing arguments for 'view' command"));
-            }
-
-            let repo_url = &effective_args[1];
-            let mut branch = None;
-            let mut folder = None;
-
-            let mut args_iter = effective_args.iter().skip(2);
-            while let Some(arg) = args_iter.next() {
-                if *arg == "-f" {
-                    folder = args_iter.next().map(|s| s.as_str());
-                } else if branch.is_none() {
-                    branch = Some(arg.as_str());
-                }
-            }
-
-            let (user, repo) =
-                parse_github_url(repo_url).ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
-
-            let progress = create_progress_bar("Fetching repository information...");
-
-            let branch = if let Some(b) = branch {
-                b.to_string()
-            } else {
-                fetch_repo_info(&user, &repo, &config).await?.default_branch
-            };
-
-            progress.set_message("Fetching tree data...");
-            let tree_items =
-                fetch_tree_recursive(&user, &repo, &branch, &config, &progress).await?;
+            let tree_items = fetch_tree_recursive(&user, &repo_name, &branch, &config, &progress).await?;
 
             let filtered_tree_items = if let Some(folder_path) = folder {
                 tree_items
                     .into_iter()
-                    .filter(|item| item.path.starts_with(folder_path))
+                    .filter(|item| item.path.starts_with(&folder_path))
                     .collect()
             } else {
                 tree_items
@@ -887,148 +904,94 @@ async fn main() -> Result<()> {
 
             progress.set_message("Building tree view...");
             print_tree_colored(filtered_tree_items, &progress, config.colored_output)?;
-        }
+        },
 
-        "pull" => {
-            if effective_args.len() < 3 {
-                return Err(anyhow!("Missing arguments for 'pull' command"));
-            }
+        Commands::Touch { repo, output, branch } => {
+            let base_path = PathBuf::from(output);
+            let (user, repo_name) = parse_github_url(&repo)
+                .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
 
-            let output_dir = if effective_args[1] == "-o" {
-                Some(PathBuf::from(&effective_args[2]))
+            let progress = create_progress_bar("Fetching repository information...");
+
+            let branch = if let Some(b) = branch {
+                b
             } else {
-                None
+                fetch_repo_info(&user, &repo_name, &config).await?.default_branch
             };
 
-            let repo_url = if output_dir.is_some() {
-                &effective_args[3]
-            } else {
-                &effective_args[1]
-            };
+            progress.set_message("Fetching tree data...");
+            let tree_items = fetch_tree_recursive(&user, &repo_name, &branch, &config, &progress).await?;
 
-            let branch = if output_dir.is_some() {
-                effective_args.get(4).map(|s| s.as_str())
-            } else {
-                effective_args.get(2).map(|s| s.as_str())
-            };
+            progress.set_message("Creating directory structure...");
+            create_placeholder_structure(tree_items, &base_path, &progress).await?;
+        },
 
-            let file_to_pull = if output_dir.is_some() {
-                effective_args.get(5).map(|s| s.as_str())
-            } else {
-                effective_args.get(3).map(|s| s.as_str())
-            };
-
-            let (user, repo) =
-                parse_github_url(repo_url).ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
+        Commands::Pull { repo, path, branch, output } => {
+            let (user, repo_name) = parse_github_url(&repo)
+                .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
 
             let progress = Arc::new(create_progress_bar("Fetching repository information..."));
 
             let branch = if let Some(b) = branch {
-                b.to_string()
+                b
             } else {
-                fetch_repo_info(&user, &repo, &config).await?.default_branch
+                fetch_repo_info(&user, &repo_name, &config).await?.default_branch
             };
-
-            let file_to_pull =
-                file_to_pull.ok_or_else(|| anyhow!("Missing file/folder to pull"))?;
 
             progress.set_message("Downloading file/folder...");
             pull_file_or_folder(
                 &user,
-                &repo,
+                &repo_name,
                 &branch,
-                file_to_pull,
-                output_dir.as_deref(),
+                &path,
+                output.as_ref().map(PathBuf::from).as_deref(),
                 config,
                 progress,
             )
             .await?;
-        }
+        },
 
-        "-dl" => {
-    if effective_args.len() < 2 {
-        return Err(anyhow!("Missing arguments for '-dl' command"));
+        Commands::Download { repo, branch, output } => {
+            let (user, repo_name) = parse_github_url(&repo)
+                .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
+
+            let progress = create_progress_bar("Downloading repository zip...");
+
+            let branch = if let Some(b) = branch {
+                b
+            } else {
+                fetch_repo_info(&user, &repo_name, &config).await?.default_branch
+            };
+
+            download_repo_zip(
+                &user,
+                &repo_name,
+                &branch,
+                output.as_ref().map(PathBuf::from).as_deref(),
+                &config,
+                &progress,
+            )
+            .await?;
+        },
+
+        Commands::Find { repo, filename, branch, exact } => {
+            let (user, repo_name) = parse_github_url(&repo)
+                .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
+
+            let progress = create_progress_bar("Searching for file...");
+
+            find_file_in_repo(
+                &user,
+                &repo_name,
+                &filename,
+                branch.as_deref(),
+                &config,
+                &progress,
+                exact,
+            )
+            .await?;
+        },
     }
 
-    let output_dir = if effective_args.len() > 2 && effective_args[1] == "-o" {
-        Some(PathBuf::from(&effective_args[2]))
-    } else {
-        None
-    };
-
-    let repo_url = if output_dir.is_some() {
-        &effective_args[3]
-    } else {
-        &effective_args[1]
-    };
-
-    let branch = if output_dir.is_some() {
-        effective_args.get(4).map(|s| s.as_str())
-    } else {
-        effective_args.get(2).map(|s| s.as_str())
-    };
-
-    let (user, repo) =
-        parse_github_url(repo_url).ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
-
-    let progress = create_progress_bar("Downloading repository zip...");
-    
-    let branch = if let Some(b) = branch {
-        b.to_string()
-    } else {
-        fetch_repo_info(&user, &repo, &config).await?.default_branch
-    };
-    
-    download_repo_zip(
-        &user,
-        &repo,
-        &branch, 
-        output_dir.as_deref(),
-        &config,
-        &progress,
-    )
-    .await?;
-}
-        
-         "find" => {
-    if effective_args.len() < 3 {
-        return Err(anyhow!("Missing arguments for 'find' command"));
-    }
-
-    let filename = &effective_args[1];
-    let repo_url = &effective_args[2];
-
-    let mut exact_match = false; // New flag for exact filename matching
-    let mut branch = None;
-
-    // Parse additional flags and branch
-    let mut args_iter = effective_args.iter().skip(3);
-    while let Some(arg) = args_iter.next() {
-        match arg.as_str() {
-            "--exact" => {
-                exact_match = true; // Enable exact filename matching
-            }
-            _ => {
-                if branch.is_none() {
-                    branch = Some(arg.as_str());
-                } else {
-                    return Err(anyhow!("Unexpected argument: {}", arg));
-                }
-            }
-        }
-    }
-
-    let progress = create_progress_bar("Searching for file...");
-
-    // Parse the repository URL
-    let (user, repo) =
-        parse_github_url(repo_url).ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
-
-    // Search for the file in the specified repository
-    find_file_in_repo(&user, &repo, filename, branch, &config, &progress, exact_match).await?;
-}
-        cmd => return Err(anyhow!("Unsupported command: {}", cmd)),
-    }
-    
     Ok(())
-    }
+}
