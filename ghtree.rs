@@ -20,7 +20,7 @@ limitations under the License.
 
 [package]
 name = "ghtree"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 
 [dependencies]
