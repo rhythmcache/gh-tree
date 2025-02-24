@@ -17,6 +17,8 @@ A simple rust implementation which uses Github API to interact with repos direct
 - others
 
 ## Usage
+
+- See [Usage](./usage.md)
 - ghtree
 ```
 Usage: ghtree touch [OPTIONS] --repo <REPO> --output <OUTPUT>
@@ -41,7 +43,7 @@ to use pat , you can also export it in environment
 export GH_TOKEN=<your github PATH>
 ```
 
-see [Usage](./usage.md)
+
 
 
 
