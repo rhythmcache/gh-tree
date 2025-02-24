@@ -11,7 +11,6 @@ version = "0.4.0"
 edition = "2021"
 
 [dependencies]
-trust-dns-resolver = "0.20"
 clap = { version = "4.4", features = ["derive"] }
 tokio = { version = "1.36", features = ["full"] }
 # reqwest = { version = "0.12", features = ["json", "stream"] }
