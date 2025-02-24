@@ -24,7 +24,7 @@ version = "0.3.0"
 edition = "2021"
 
 [dependencies]
-use clap::{Parser, Subcommand};
+clap = { version = "4.0", features = ["derive"] }
 tokio = { version = "1.36", features = ["full"] }
 # reqwest = { version = "0.11", features = ["json", "stream"] }
 reqwest = { version = "0.11", features = ["json", "stream", "rustls-tls"], default-features = false }
@@ -89,23 +89,20 @@ struct GitHubContentItem {
 struct Config {
     api_token: Option<String>,
     client: reqwest::Client,
-    colored_output: bool,
 }
 
 impl Config {
-    fn new(colored_output: bool) -> Self {
+    fn new() -> Self {
         Self {
             api_token: None,
             client: reqwest::Client::new(),
-            colored_output,
         }
     }
 
-    fn with_token(token: String, colored_output: bool) -> Self {
+    fn with_token(token: String) -> Self {
         Self {
             api_token: Some(token),
             client: reqwest::Client::new(),
-            colored_output,
         }
     }
 
@@ -775,10 +772,6 @@ struct Cli {
     #[arg(long = "pat", global = true)]
     pat: Option<String>,
 
-    /// Enable colored output with icons
-    #[arg(short = 'c', long = "color", global = true)]
-    color: bool,
-
     #[command(subcommand)]
     command: Commands,
 }
@@ -798,6 +791,10 @@ enum Commands {
         /// Specific folder to view
         #[arg(short = 'f', long = "folder")]
         folder: Option<String>,
+
+        /// Enable colored output with icons
+        #[arg(short = 'c', long = "color")]
+        color: bool,
     },
 
     /// Create empty directory structure
@@ -873,13 +870,18 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let config = if let Some(token) = cli.pat.or_else(|| env::var("GH_TOKEN").ok()) {
         println!("Using provided PAT token to fetch data.");
-        Arc::new(Config::with_token(token, cli.color))
+        Arc::new(Config::with_token(token))
     } else {
-        Arc::new(Config::new(cli.color))
+        Arc::new(Config::new())
     };
 
     match cli.command {
-        Commands::View { repo, branch, folder } => {
+        Commands::View {
+            repo,
+            branch,
+            folder,
+            color, // Add `color` here
+        } => {
             let (user, repo_name) = parse_github_url(&repo)
                 .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
 
@@ -904,8 +906,8 @@ async fn main() -> Result<()> {
             };
 
             progress.set_message("Building tree view...");
-            print_tree_colored(filtered_tree_items, &progress, config.colored_output)?;
-        },
+            print_tree_colored(filtered_tree_items, &progress, color)?; // Use `color` here
+        }
 
         Commands::Touch { repo, output, branch } => {
             let base_path = PathBuf::from(output);
@@ -925,7 +927,7 @@ async fn main() -> Result<()> {
 
             progress.set_message("Creating directory structure...");
             create_placeholder_structure(tree_items, &base_path, &progress).await?;
-        },
+        }
 
         Commands::Pull { repo, path, branch, output } => {
             let (user, repo_name) = parse_github_url(&repo)
@@ -950,7 +952,7 @@ async fn main() -> Result<()> {
                 progress,
             )
             .await?;
-        },
+        }
 
         Commands::Download { repo, branch, output } => {
             let (user, repo_name) = parse_github_url(&repo)
@@ -973,9 +975,14 @@ async fn main() -> Result<()> {
                 &progress,
             )
             .await?;
-        },
+        }
 
-        Commands::Find { repo, filename, branch, exact } => {
+        Commands::Find {
+            repo,
+            filename,
+            branch,
+            exact,
+        } => {
             let (user, repo_name) = parse_github_url(&repo)
                 .ok_or_else(|| anyhow!("Invalid GitHub URL"))?;
 
@@ -991,7 +998,7 @@ async fn main() -> Result<()> {
                 exact,
             )
             .await?;
-        },
+        }
     }
 
     Ok(())
