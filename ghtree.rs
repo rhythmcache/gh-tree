@@ -24,6 +24,7 @@ version = "0.3.0"
 edition = "2021"
 
 [dependencies]
+use clap::{Parser, Subcommand};
 tokio = { version = "1.36", features = ["full"] }
 # reqwest = { version = "0.11", features = ["json", "stream"] }
 reqwest = { version = "0.11", features = ["json", "stream", "rustls-tls"], default-features = false }
