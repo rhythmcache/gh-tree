@@ -329,19 +329,11 @@ async fn pull_command(
     println!("All downloads completed!");
     Ok(())
 }
-fn print_usage() {
-    println!("ghrls view <user/repo or URL> [--tag <tag>] [-d/--detailed] [-n/--no-color] [--latest [N]]");
-    println!();
-    println!("ghrls pull <user/repo or URL> [--tag <tag>] (--all | <file>) [-o <dir>]");
-}
+
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cli = if env::args().len() <= 1 {
-        print_usage();
-        std::process::exit(1);
-    } else {
-        Cli::parse()
-    };
+    let cli = Cli::parse();
     let token = cli.pat.or_else(|| env::var("GH_TOKEN").ok());
     if token.is_some() {
         println!("Using GitHub token for authentication.");
