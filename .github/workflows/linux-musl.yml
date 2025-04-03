@@ -1,0 +1,180 @@
+name: Build Rust Binaries
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.architecture }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [x86_64, aarch64, armv7, i686, riscv64]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Set target
+        id: set-target
+        run: |
+          case "${{ matrix.architecture }}" in
+            x86_64)
+              echo "TARGET=x86_64-unknown-linux-musl" >> $GITHUB_ENV
+              echo "NEED_CROSS=false" >> $GITHUB_ENV
+              echo "ARCH_DIR=x86_64" >> $GITHUB_ENV
+              ;;
+            aarch64)
+              echo "TARGET=aarch64-unknown-linux-musl" >> $GITHUB_ENV
+              echo "TOOLCHAIN_URL=https://musl.cc/aarch64-linux-musl-cross.tgz" >> $GITHUB_ENV
+              echo "CC=aarch64-linux-musl-gcc" >> $GITHUB_ENV
+              echo "ARCH_DIR=aarch64" >> $GITHUB_ENV
+              echo "NEED_CROSS=true" >> $GITHUB_ENV
+              ;;
+            armv7)
+              echo "TARGET=armv7-unknown-linux-musleabihf" >> $GITHUB_ENV
+              echo "TOOLCHAIN_URL=https://musl.cc/armv7l-linux-musleabihf-cross.tgz" >> $GITHUB_ENV
+              echo "CC=armv7l-linux-musleabihf-gcc" >> $GITHUB_ENV
+              echo "ARCH_DIR=armv7" >> $GITHUB_ENV
+              echo "NEED_CROSS=true" >> $GITHUB_ENV
+              ;;
+            i686)
+              echo "TARGET=i686-unknown-linux-musl" >> $GITHUB_ENV
+              echo "TOOLCHAIN_URL=https://musl.cc/i686-linux-musl-cross.tgz" >> $GITHUB_ENV
+              echo "CC=i686-linux-musl-gcc" >> $GITHUB_ENV
+              echo "ARCH_DIR=x86" >> $GITHUB_ENV
+              echo "NEED_CROSS=true" >> $GITHUB_ENV
+              ;;
+            riscv64)
+              echo "TARGET=riscv64gc-unknown-linux-musl" >> $GITHUB_ENV
+              echo "TOOLCHAIN_URL=https://musl.cc/riscv64-linux-musl-cross.tgz" >> $GITHUB_ENV
+              echo "CC=riscv64-linux-musl-gcc" >> $GITHUB_ENV
+              echo "ARCH_DIR=riscv64" >> $GITHUB_ENV
+              echo "NEED_CROSS=true" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Add Rust target
+        run: rustup target add ${{ env.TARGET }}
+
+      - name: Install musl-tools
+        if: env.NEED_CROSS == 'false'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl musl-tools musl-dev
+
+      - name: Download MUSL Compiler
+        if: env.NEED_CROSS == 'true'
+        run: |
+          mkdir -p /tmp/musl-cross
+          cd /tmp/musl-cross
+          wget ${{ env.TOOLCHAIN_URL }} -O toolchain.tgz
+          tar -xzf toolchain.tgz
+          find /tmp/musl-cross -name "${{ env.CC }}" -type f
+          TOOLCHAIN_BIN=$(find /tmp/musl-cross -name "${{ env.CC }}" -type f | xargs dirname)
+          echo "PATH=$PATH:$TOOLCHAIN_BIN" >> $GITHUB_ENV
+          echo "Added $TOOLCHAIN_BIN to PATH"
+          echo "CC=$TOOLCHAIN_BIN/${{ env.CC }}" >> $GITHUB_ENV
+
+      - name: Setup cargo config
+        if: env.NEED_CROSS == 'true'
+        run: |
+          mkdir -p .cargo
+          cat > .cargo/config.toml << EOF
+          [target.${{ env.TARGET }}]
+          linker = "${{ env.CC }}"
+          EOF
+          cat .cargo/config.toml
+
+      - name: Build gh-tree for ${{ matrix.architecture }}
+        run: |
+          echo "Building gh-tree for ${{ env.TARGET }}"
+          if [ "${{ env.NEED_CROSS }}" = "true" ]; then
+            echo "Cross-compiling with ${{ env.CC }}"
+          fi
+          cd gh-tree
+          cargo build --release --target ${{ env.TARGET }} -v
+        env:
+          RUSTFLAGS: '-C target-feature=+crt-static'
+
+      - name: Build ghrls for ${{ matrix.architecture }}
+        run: |
+          echo "Building ghrls for ${{ env.TARGET }}"
+          if [ "${{ env.NEED_CROSS }}" = "true" ]; then
+            echo "Cross-compiling with ${{ env.CC }}"
+          fi
+          cd ghrls
+          cargo build --release --target ${{ env.TARGET }} -v
+        env:
+          RUSTFLAGS: '-C target-feature=+crt-static'
+
+      - name: Create artifacts directory
+        run: mkdir -p artifacts/${{ matrix.architecture }}
+
+      - name: Copy binaries and docs
+        run: |
+          cp gh-tree/target/${{ env.TARGET }}/release/gh-tree ./artifacts/${{ matrix.architecture }}/gh-tree || echo "gh-tree binary not found"
+          cp ghrls/target/${{ env.TARGET }}/release/ghrls ./artifacts/${{ matrix.architecture }}/ghrls || echo "ghrls binary not found"
+          cp LICENSE ./artifacts/${{ matrix.architecture }}/ || echo "LICENSE not found"
+          cp README.md ./artifacts/${{ matrix.architecture }}/ || echo "README.md not found"
+          cp usage.md ./artifacts/${{ matrix.architecture }}/ || echo "usage.md not found"
+          
+          # Make binaries executable
+          if [ -f ./artifacts/${{ matrix.architecture }}/gh-tree ]; then
+            chmod +x ./artifacts/${{ matrix.architecture }}/gh-tree
+          fi
+          if [ -f ./artifacts/${{ matrix.architecture }}/ghrls ]; then
+            chmod +x ./artifacts/${{ matrix.architecture }}/ghrls
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-tools-${{ matrix.architecture }}-linux-musl
+          path: artifacts/${{ matrix.architecture }}
+          if-no-files-found: warn
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release archives
+        run: |
+          cd artifacts
+          for dir in */; do
+            echo "Creating archives for $dir"
+            pushd "$dir"
+            # Create a tarball
+            tar -czf "../${dir%/}.tar.gz" *
+            # Create a zip file
+            zip -r "../${dir%/}.zip" *
+            popd
+          done
+          ls -la *.tar.gz *.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
