@@ -15,3 +15,13 @@ reqwest = { version = "*", features = ["json", "stream", "rustls-tls"], default-
 serde = { version = "*", features = ["derive"] }
 tokio = { version = "*", features = ["full"] }
 colored = "*"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+debug = false
+overflow-checks = false
+
