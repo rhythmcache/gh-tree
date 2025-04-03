@@ -1,0 +1,139 @@
+name: Build Windows Rust Binaries
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows ${{ matrix.architecture }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        architecture: [x86_64, i686]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Set target
+        id: set-target
+        run: |
+          case "${{ matrix.architecture }}" in
+            x86_64)
+              echo "TARGET=x86_64-pc-windows-gnu" >> $GITHUB_ENV
+              echo "TOOLCHAIN_URL=https://musl.cc/x86_64-w64-mingw32-cross.tgz" >> $GITHUB_ENV
+              echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
+              echo "ARCH_DIR=x86_64" >> $GITHUB_ENV
+              ;;
+            i686)
+              echo "TARGET=i686-pc-windows-gnu" >> $GITHUB_ENV
+              echo "TOOLCHAIN_URL=https://musl.cc/i686-w64-mingw32-cross.tgz" >> $GITHUB_ENV
+              echo "CC=i686-w64-mingw32-gcc" >> $GITHUB_ENV
+              echo "ARCH_DIR=i686" >> $GITHUB_ENV
+              ;;
+          esac
+
+      - name: Add Rust target
+        run: rustup target add ${{ env.TARGET }}
+
+      - name: Download MinGW Compiler
+        run: |
+          mkdir -p /tmp/mingw-cross
+          cd /tmp/mingw-cross
+          wget ${{ env.TOOLCHAIN_URL }} -O toolchain.tgz
+          tar -xzf toolchain.tgz
+          find /tmp/mingw-cross -name "${{ env.CC }}" -type f
+          TOOLCHAIN_BIN=$(find /tmp/mingw-cross -name "${{ env.CC }}" -type f | xargs dirname)
+          echo "PATH=$PATH:$TOOLCHAIN_BIN" >> $GITHUB_ENV
+          echo "Added $TOOLCHAIN_BIN to PATH"
+          echo "CC=$TOOLCHAIN_BIN/${{ env.CC }}" >> $GITHUB_ENV
+
+      - name: Setup cargo config
+        run: |
+          mkdir -p .cargo
+          cat > .cargo/config.toml << EOF
+          [target.${{ env.TARGET }}]
+          linker = "${{ env.CC }}"
+          EOF
+          cat .cargo/config.toml
+
+      - name: Build gh-tree for Windows ${{ matrix.architecture }}
+        run: |
+          echo "Building gh-tree for ${{ env.TARGET }}"
+          echo "Cross-compiling with ${{ env.CC }}"
+          cd gh-tree
+          cargo build --release --target ${{ env.TARGET }} -v
+        env:
+          RUSTFLAGS: '-C target-feature=+crt-static'
+
+      - name: Build ghrls for Windows ${{ matrix.architecture }}
+        run: |
+          echo "Building ghrls for ${{ env.TARGET }}"
+          echo "Cross-compiling with ${{ env.CC }}"
+          cd ghrls
+          cargo build --release --target ${{ env.TARGET }} -v
+        env:
+          RUSTFLAGS: '-C target-feature=+crt-static'
+
+      - name: Create artifacts directory
+        run: mkdir -p artifacts/windows-${{ matrix.architecture }}
+
+      - name: Copy binaries and docs
+        run: |
+          cp gh-tree/target/${{ env.TARGET }}/release/gh-tree.exe ./artifacts/windows-${{ matrix.architecture }}/gh-tree.exe || echo "gh-tree binary not found"
+          cp ghrls/target/${{ env.TARGET }}/release/ghrls.exe ./artifacts/windows-${{ matrix.architecture }}/ghrls.exe || echo "ghrls binary not found"
+          cp LICENSE ./artifacts/windows-${{ matrix.architecture }}/ || echo "LICENSE not found"
+          cp README.md ./artifacts/windows-${{ matrix.architecture }}/ || echo "README.md not found"
+          cp usage.md ./artifacts/windows-${{ matrix.architecture }}/ || echo "usage.md not found"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-tools-windows-${{ matrix.architecture }}
+          path: artifacts/windows-${{ matrix.architecture }}
+          if-no-files-found: warn
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release archives
+        run: |
+          cd artifacts
+          for dir in */; do
+            echo "Creating archives for $dir"
+            pushd "$dir"
+            # Create a tarball
+            tar -czf "../${dir%/}.tar.gz" *
+            # Create a zip file
+            zip -r "../${dir%/}.zip" *
+            popd
+          done
+          ls -la *.tar.gz *.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
