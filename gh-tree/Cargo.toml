@@ -1,5 +1,5 @@
 [package]
-name = "ghtree"
+name = "gh-tree"
 version = "0.4.0"
 description = "Command Line tool that uses Github API"
 edition = "2024"
@@ -18,3 +18,12 @@ indicatif = "*"
 async-stream = "*"
 colored = "*"
 tokio-stream = "*"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+debug = false
+overflow-checks = false
