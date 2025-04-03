@@ -131,8 +131,8 @@ jobs:
           cp usage.md ./artifacts/${{ matrix.architecture }}/ || echo "usage.md not found"
           
           # Make binaries executable
-          if [ -f ./artifacts/${{ matrix.architecture }}/gh-tree ]; then
-            chmod +x ./artifacts/${{ matrix.architecture }}/gh-tree
+          if [ -f ./artifacts/${{ matrix.architecture }}/ghtree ]; then
+            chmod +x ./artifacts/${{ matrix.architecture }}/ghtree
           fi
           if [ -f ./artifacts/${{ matrix.architecture }}/ghrls ]; then
             chmod +x ./artifacts/${{ matrix.architecture }}/ghrls
