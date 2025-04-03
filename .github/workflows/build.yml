@@ -1,4 +1,4 @@
-name: Build
+name: Build Rust Binaries
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
         target: ${{ matrix.target }}
         override: true
 
-    - name: Set up cross compiler
+    - name: Set up cross compiler (non-x86_64)
       if: matrix.toolchain_url != ''
       run: |
         mkdir -p "$HOME/musl-cross"
