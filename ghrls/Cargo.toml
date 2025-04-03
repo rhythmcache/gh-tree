@@ -1,0 +1,17 @@
+[package]
+name = "ghrls"
+version = "0.3.0"
+edition = "2024"
+description = "Command Line Tool That Uses Github API"
+
+[dependencies]
+anyhow = "*"
+bytes = "*"
+clap = { version = "*", features = ["derive"] }
+futures-util = "*"
+humansize = "*"
+indicatif = "*"
+reqwest = { version = "*", features = ["json", "stream", "rustls-tls"], default-features = false }
+serde = { version = "*", features = ["derive"] }
+tokio = { version = "*", features = ["full"] }
+colored = "*"
